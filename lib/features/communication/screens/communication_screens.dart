@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:ui_specification/core/theme/app_colors.dart';
+import 'package:ui_specification/core/theme/app_dimensions.dart';
 import 'package:ui_specification/core/widgets/custom_card.dart';
 import 'package:ui_specification/features/communication/providers/communication_provider.dart';
 import 'package:ui_specification/models/message.dart';
@@ -26,13 +28,7 @@ class MessageListScreen extends StatelessWidget {
           ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
         return Scaffold(
-          backgroundColor: Colors.grey[50],
-          appBar: AppBar(
-            title: const Text('Messages'),
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
-            elevation: 0,
-          ),
+          appBar: AppBar(title: const Text('Messages')),
           body: provider.isLoading
               ? const Center(child: CircularProgressIndicator())
               : ListView.builder(
@@ -141,13 +137,7 @@ class _ChatScreenState extends State<ChatScreen> {
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
 
         return Scaffold(
-          backgroundColor: Colors.grey[50],
-          appBar: AppBar(
-            title: Text(widget.contactName),
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
-            elevation: 1,
-          ),
+          appBar: AppBar(title: Text(widget.contactName)),
           body: Column(
             children: [
               Expanded(
@@ -170,14 +160,17 @@ class _ChatScreenState extends State<ChatScreen> {
                           vertical: 10,
                         ),
                         decoration: BoxDecoration(
-                          color: isMe ? Colors.blue : Colors.white,
-                          borderRadius: BorderRadius.circular(16).copyWith(
-                            bottomRight: isMe ? Radius.zero : null,
-                            bottomLeft: !isMe ? Radius.zero : null,
-                          ),
+                          color: isMe ? AppColors.primary : AppColors.surface,
+                          borderRadius:
+                              BorderRadius.circular(
+                                AppDimensions.radiusMedium,
+                              ).copyWith(
+                                bottomRight: isMe ? Radius.zero : null,
+                                bottomLeft: !isMe ? Radius.zero : null,
+                              ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: AppColors.shadow,
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -192,7 +185,9 @@ class _ChatScreenState extends State<ChatScreen> {
                             Text(
                               msg.content,
                               style: TextStyle(
-                                color: isMe ? Colors.white : Colors.black87,
+                                color: isMe
+                                    ? AppColors.textOnPrimary
+                                    : AppColors.textPrimary,
                                 fontSize: 16,
                               ),
                             ),
@@ -200,7 +195,9 @@ class _ChatScreenState extends State<ChatScreen> {
                             Text(
                               DateFormat('h:mm a').format(msg.timestamp),
                               style: TextStyle(
-                                color: isMe ? Colors.white70 : Colors.grey,
+                                color: isMe
+                                    ? AppColors.textOnPrimary.withOpacity(0.7)
+                                    : AppColors.textSecondary,
                                 fontSize: 10,
                               ),
                             ),
@@ -213,13 +210,13 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black12,
+                      color: AppColors.shadow,
                       blurRadius: 4,
-                      offset: Offset(0, -2),
+                      offset: const Offset(0, -2),
                     ),
                   ],
                 ),
@@ -274,11 +271,13 @@ class _ChatScreenState extends State<ChatScreen> {
                               decoration: InputDecoration(
                                 hintText: 'Type a message...',
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(24),
+                                  borderRadius: BorderRadius.circular(
+                                    AppDimensions.radiusLarge,
+                                  ),
                                   borderSide: BorderSide.none,
                                 ),
                                 filled: true,
-                                fillColor: Colors.grey[100],
+                                fillColor: AppColors.surfaceDim,
                                 contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 20,
                                   vertical: 10,
@@ -292,9 +291,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                     const SizedBox(width: 8),
                     CircleAvatar(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: AppColors.primary,
                       child: IconButton(
-                        icon: const Icon(Icons.send, color: Colors.white),
+                        icon: Icon(Icons.send, color: AppColors.textOnPrimary),
                         onPressed: () {
                           if (_messageController.text.trim().isNotEmpty) {
                             provider.sendMessage(

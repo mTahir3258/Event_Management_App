@@ -31,6 +31,7 @@ import 'package:ui_specification/features/quotations/providers/quotation_provide
 import 'package:ui_specification/features/quotations/screens/quotation_list_screen.dart';
 import 'package:ui_specification/features/quotations/screens/quotation_detail_screen.dart';
 import 'package:ui_specification/features/quotations/screens/quotation_form_screen.dart';
+import 'package:ui_specification/models/quotation.dart';
 import 'package:ui_specification/features/setup/providers/master_data_provider.dart';
 import 'package:ui_specification/features/setup/screens/master_data_screens.dart';
 import 'package:ui_specification/features/setup/screens/team_member_screen.dart';
@@ -102,7 +103,11 @@ class MyApp extends StatelessWidget {
           },
           Routes.quotationList: (context) => const QuotationListScreen(),
           Routes.quotationDetails: (context) => const QuotationDetailScreen(),
-          Routes.quotationForm: (context) => const QuotationFormScreen(),
+          Routes.quotationForm: (context) {
+            final args = ModalRoute.of(context)?.settings.arguments;
+            final quotation = args is Quotation ? args : null;
+            return QuotationFormScreen(quotation: quotation);
+          },
           Routes.teamMembers: (context) => const TeamMemberScreen(),
 
           // Setup Routes
