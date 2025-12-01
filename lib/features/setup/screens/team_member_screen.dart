@@ -97,7 +97,7 @@ class _TeamMemberScreenState extends State<TeamMemberScreen> {
                         ),
                         const SizedBox(height: AppDimensions.spacing4),
                         Text(
-                          member['category'],
+                          '${member['category']} - ${member['role'] ?? 'N/A'}',
                           style: const TextStyle(fontSize: 14),
                         ),
                       ],
@@ -113,12 +113,23 @@ class _TeamMemberScreenState extends State<TeamMemberScreen> {
               const Divider(),
               const SizedBox(height: AppDimensions.spacing4),
               Text(
-                'Phone: ${member['phone']}',
+                'Mobile: ${member['mobile'] ?? member['phone']}',
                 style: const TextStyle(fontSize: 12),
               ),
+              if (member['whatsapp'] != null &&
+                  member['whatsapp'] != member['mobile'])
+                Text(
+                  'WhatsApp: ${member['whatsapp']}',
+                  style: const TextStyle(fontSize: 12),
+                ),
               if (member['email'] != null)
                 Text(
                   'Email: ${member['email']}',
+                  style: const TextStyle(fontSize: 12),
+                ),
+              if (member['joiningDate'] != null)
+                Text(
+                  'Joined: ${DateTime.parse(member['joiningDate']).day}/${DateTime.parse(member['joiningDate']).month}/${DateTime.parse(member['joiningDate']).year}',
                   style: const TextStyle(fontSize: 12),
                 ),
             ],
@@ -185,14 +196,29 @@ class _TeamMemberScreenState extends State<TeamMemberScreen> {
 
   void _showAddEditDialog({Map<String, dynamic>? member}) {
     final formKey = GlobalKey<FormState>();
-    final nameController = TextEditingController(text: member?['name']);
-    final phoneController = TextEditingController(text: member?['phone']);
-    final emailController = TextEditingController(text: member?['email']);
+    final firstNameController = TextEditingController(
+      text: member?['firstName'] ?? '',
+    );
+    final lastNameController = TextEditingController(
+      text: member?['lastName'] ?? '',
+    );
+    final mobileController = TextEditingController(
+      text: member?['mobile'] ?? '',
+    );
+    final whatsappController = TextEditingController(
+      text: member?['whatsapp'] ?? '',
+    );
+    final emailController = TextEditingController(text: member?['email'] ?? '');
+    final roleController = TextEditingController(text: member?['role'] ?? '');
+    String selectedCategory = member?['category'] ?? 'Photographer';
+    DateTime? joiningDate = member?['joiningDate'] != null
+        ? DateTime.parse(member!['joiningDate'])
+        : null;
 
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
           title: Text(member == null ? 'Add Team Member' : 'Edit Team Member'),
           content: SingleChildScrollView(
             child: Form(
@@ -200,15 +226,38 @@ class _TeamMemberScreenState extends State<TeamMemberScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CustomTextField(
-                    controller: nameController,
-                    label: 'Name',
-                    validator: (value) => Validators.required(value, 'Name'),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: CustomTextField(
+                          controller: firstNameController,
+                          label: 'First Name',
+                          validator: (value) =>
+                              Validators.required(value, 'First Name'),
+                        ),
+                      ),
+                      const SizedBox(width: AppDimensions.spacing16),
+                      Expanded(
+                        child: CustomTextField(
+                          controller: lastNameController,
+                          label: 'Last Name',
+                          validator: (value) =>
+                              Validators.required(value, 'Last Name'),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: AppDimensions.spacing16),
                   CustomTextField(
-                    controller: phoneController,
-                    label: 'Phone',
+                    controller: mobileController,
+                    label: 'Mobile Number',
+                    keyboardType: TextInputType.phone,
+                    validator: Validators.phone,
+                  ),
+                  const SizedBox(height: AppDimensions.spacing16),
+                  CustomTextField(
+                    controller: whatsappController,
+                    label: 'WhatsApp Number',
                     keyboardType: TextInputType.phone,
                     validator: Validators.phone,
                   ),
@@ -218,6 +267,69 @@ class _TeamMemberScreenState extends State<TeamMemberScreen> {
                     label: 'Email',
                     keyboardType: TextInputType.emailAddress,
                     validator: Validators.email,
+                  ),
+                  const SizedBox(height: AppDimensions.spacing16),
+                  DropdownButtonFormField<String>(
+                    value: selectedCategory,
+                    decoration: const InputDecoration(
+                      labelText: 'Category',
+                      border: OutlineInputBorder(),
+                    ),
+                    items:
+                        [
+                              'Photographer',
+                              'Videographer',
+                              'Decorator',
+                              'Catering',
+                              'DJ',
+                              'Transportation',
+                            ]
+                            .map(
+                              (category) => DropdownMenuItem(
+                                value: category,
+                                child: Text(category),
+                              ),
+                            )
+                            .toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        selectedCategory = value;
+                      }
+                    },
+                    validator: (value) =>
+                        value == null ? 'Please select a category' : null,
+                  ),
+                  const SizedBox(height: AppDimensions.spacing16),
+                  InkWell(
+                    onTap: () async {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: joiningDate ?? DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime.now(),
+                      );
+                      if (date != null) {
+                        setState(() => joiningDate = date);
+                      }
+                    },
+                    child: InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'Date of Joining',
+                        border: OutlineInputBorder(),
+                        suffixIcon: Icon(Icons.calendar_today),
+                      ),
+                      child: Text(
+                        joiningDate != null
+                            ? '${joiningDate!.day}/${joiningDate!.month}/${joiningDate!.year}'
+                            : 'Select date',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppDimensions.spacing16),
+                  CustomTextField(
+                    controller: roleController,
+                    label: 'Role',
+                    validator: (value) => Validators.required(value, 'Role'),
                   ),
                 ],
               ),
@@ -231,15 +343,45 @@ class _TeamMemberScreenState extends State<TeamMemberScreen> {
             ElevatedButton(
               onPressed: () {
                 if (formKey.currentState!.validate()) {
-                  // TODO: Save team member
+                  final teamMember = {
+                    'id':
+                        member?['id'] ??
+                        DateTime.now().millisecondsSinceEpoch.toString(),
+                    'firstName': firstNameController.text,
+                    'lastName': lastNameController.text,
+                    'name':
+                        '${firstNameController.text} ${lastNameController.text}'
+                            .trim(),
+                    'mobile': mobileController.text,
+                    'whatsapp': whatsappController.text,
+                    'email': emailController.text,
+                    'category': selectedCategory,
+                    'joiningDate': joiningDate?.toIso8601String(),
+                    'role': roleController.text,
+                    'status': 'active',
+                  };
+
+                  setState(() {
+                    if (member != null) {
+                      final index = mockTeamMembers.indexWhere(
+                        (m) => m['id'] == member['id'],
+                      );
+                      if (index != -1) {
+                        mockTeamMembers[index] = teamMember;
+                      }
+                    } else {
+                      mockTeamMembers.add(teamMember);
+                    }
+                  });
+
                   Navigator.of(context).pop();
                 }
               },
               child: const Text('Save'),
             ),
           ],
-        );
-      },
+        ),
+      ),
     );
   }
 }

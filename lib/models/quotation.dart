@@ -21,8 +21,13 @@ class Quotation {
   final String quotationNumber;
   final String clientId;
   final String clientName;
+  final String? firstName;
+  final String? lastName;
+  final String? eventName;
   final String eventType;
   final DateTime eventDate;
+  final String? team;
+  final String? commercial;
   final List<QuotationItem> items;
   final QuotationStatus status;
   final DateTime createdAt;
@@ -33,8 +38,13 @@ class Quotation {
     required this.quotationNumber,
     required this.clientId,
     required this.clientName,
+    this.firstName,
+    this.lastName,
+    this.eventName,
     required this.eventType,
     required this.eventDate,
+    this.team,
+    this.commercial,
     required this.items,
     required this.status,
     required this.createdAt,

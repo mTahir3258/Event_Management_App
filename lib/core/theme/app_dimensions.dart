@@ -1,7 +1,9 @@
 /// App dimensions following 8px grid system
 class AppDimensions {
   // Spacing (8px grid system)
+  static const double spacing2 = 2.0;
   static const double spacing4 = 4.0;
+  static const double spacing6 = 6.0;
   static const double spacing8 = 8.0;
   static const double spacing12 = 12.0;
   static const double spacing16 = 16.0;

@@ -26,9 +26,15 @@ class MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Use smaller padding on desktop/tablet for more compact cards
+    final isDesktopOrTablet = MediaQuery.of(context).size.width > 600;
+    final cardPadding = isDesktopOrTablet
+        ? AppDimensions.spacing6
+        : AppDimensions.spacing8;
+
     return CustomCard(
       onTap: onTap,
-      padding: const EdgeInsets.all(AppDimensions.spacing12), // Reduced from 16
+      padding: EdgeInsets.all(cardPadding), // Responsive padding
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -46,7 +52,7 @@ class MetricCard extends StatelessWidget {
                 child: Icon(
                   icon,
                   color: iconColor ?? AppColors.primary,
-                  size: 20, // Reduced from 24 for better fit
+                  size: 16, // Further reduced from 20 for more compact design
                 ),
               ),
               const Spacer(),
@@ -61,7 +67,9 @@ class MetricCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: AppDimensions.spacing8), // Reduced from 16
+          const SizedBox(
+            height: AppDimensions.spacing4,
+          ), // Further reduced from spacing8
           Text(
             title,
             style: Theme.of(
@@ -70,14 +78,18 @@ class MetricCard extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: AppDimensions.spacing4),
+          const SizedBox(
+            height: AppDimensions.spacing2,
+          ), // Further reduced from spacing4
           Text(
             value,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
-            ), // Changed from headlineLarge to headlineMedium
+            ), // Changed from headlineMedium to headlineSmall for more compact design
           ),
-          const SizedBox(height: AppDimensions.spacing4),
+          const SizedBox(
+            height: AppDimensions.spacing2,
+          ), // Further reduced from spacing4
           Text(
             subtitle,
             style: Theme.of(context).textTheme.bodySmall,

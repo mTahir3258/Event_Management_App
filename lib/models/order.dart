@@ -2,6 +2,7 @@ class Order {
   final String id;
   final String clientName;
   final String clientId;
+  final String? clientMobileNumber;
   final String eventName;
   final String eventType;
   final DateTime eventDate;
@@ -10,6 +11,10 @@ class Order {
   final String paymentStatus; // paid, partial, pending, overdue
   final double totalAmount;
   final double paidAmount;
+  final double? totalOrderValue;
+  final double? dueAmount;
+  final DateTime? dueDate;
+  final double? advancedAmount;
   final List<ServiceAssignment> services;
   final List<PaymentRecord> payments;
   final String? notes;
@@ -19,6 +24,7 @@ class Order {
     required this.id,
     required this.clientName,
     required this.clientId,
+    this.clientMobileNumber,
     required this.eventName,
     required this.eventType,
     required this.eventDate,
@@ -27,6 +33,10 @@ class Order {
     required this.paymentStatus,
     required this.totalAmount,
     required this.paidAmount,
+    this.totalOrderValue,
+    this.dueAmount,
+    this.dueDate,
+    this.advancedAmount,
     this.services = const [],
     this.payments = const [],
     this.notes,
@@ -49,6 +59,7 @@ class Order {
         'Vikram & Kavita',
       ][index % 3],
       clientId: 'CLT${index.toString().padLeft(3, '0')}',
+      clientMobileNumber: '+91 ${98765 + index} ${43210 + index}',
       eventName: [
         'Wedding Ceremony',
         'Reception',
@@ -76,11 +87,13 @@ class Order {
           serviceName: 'Photography',
           teamMember: 'Rahul Sharma',
           status: 'assigned',
+          persons: 50,
         ),
         ServiceAssignment(
           serviceName: 'Decoration',
           teamMember: 'Priya Singh',
           status: 'assigned',
+          persons: 100,
         ),
       ],
       payments: [
@@ -109,13 +122,15 @@ class Order {
 
 class ServiceAssignment {
   final String serviceName;
-  final String teamMember;
+  final String? teamMember;
   final String status; // assigned, in_progress, completed
+  final int? persons;
 
   ServiceAssignment({
     required this.serviceName,
-    required this.teamMember,
+    this.teamMember,
     required this.status,
+    this.persons,
   });
 }
 

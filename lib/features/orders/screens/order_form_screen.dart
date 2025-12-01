@@ -19,16 +19,34 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _clientNameController;
   late TextEditingController _clientIdController;
+  late TextEditingController _clientMobileNumberController;
+  late TextEditingController _passwordController;
   late TextEditingController _eventNameController;
   late TextEditingController _eventTypeController;
   late TextEditingController _venueController;
   late TextEditingController _totalAmountController;
   late TextEditingController _paidAmountController;
+  late TextEditingController _totalOrderValueController;
+  late TextEditingController _dueAmountController;
+  late TextEditingController _advancedAmountController;
   late TextEditingController _notesController;
 
   DateTime? _eventDate;
+  DateTime? _dueDate;
   String _status = 'pending';
   String _paymentStatus = 'pending';
+  bool _obscurePassword = true;
+
+  final List<String> _availableServices = [
+    'Wedding',
+    'Photography',
+    'Decoration',
+    'Catering',
+    'DJ',
+    'Transportation',
+  ];
+  late Map<String, bool> _selectedServices;
+  late Map<String, TextEditingController> _personsControllers;
 
   @override
   void initState() {
@@ -39,6 +57,10 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
     _clientIdController = TextEditingController(
       text: widget.order?.clientId ?? '',
     );
+    _clientMobileNumberController = TextEditingController(
+      text: widget.order?.clientMobileNumber ?? '',
+    );
+    _passwordController = TextEditingController();
     _eventNameController = TextEditingController(
       text: widget.order?.eventName ?? '',
     );
@@ -52,12 +74,39 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
     _paidAmountController = TextEditingController(
       text: widget.order?.paidAmount.toString() ?? '',
     );
+    _totalOrderValueController = TextEditingController(
+      text: widget.order?.totalOrderValue?.toString() ?? '',
+    );
+    _dueAmountController = TextEditingController(
+      text: widget.order?.dueAmount?.toString() ?? '',
+    );
+    _advancedAmountController = TextEditingController(
+      text: widget.order?.advancedAmount?.toString() ?? '',
+    );
     _notesController = TextEditingController(text: widget.order?.notes ?? '');
 
     _eventDate = widget.order?.eventDate;
+    _dueDate = widget.order?.dueDate;
     if (widget.order != null) {
       _status = widget.order!.status;
       _paymentStatus = widget.order!.paymentStatus;
+    }
+
+    _selectedServices = {
+      for (var service in _availableServices) service: false,
+    };
+    _personsControllers = {
+      for (var service in _availableServices) service: TextEditingController(),
+    };
+
+    if (widget.order != null) {
+      for (var service in widget.order!.services) {
+        if (_availableServices.contains(service.serviceName)) {
+          _selectedServices[service.serviceName] = true;
+          _personsControllers[service.serviceName]!.text =
+              service.persons?.toString() ?? '';
+        }
+      }
     }
   }
 
@@ -65,12 +114,20 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
   void dispose() {
     _clientNameController.dispose();
     _clientIdController.dispose();
+    _clientMobileNumberController.dispose();
+    _passwordController.dispose();
     _eventNameController.dispose();
     _eventTypeController.dispose();
     _venueController.dispose();
     _totalAmountController.dispose();
     _paidAmountController.dispose();
+    _totalOrderValueController.dispose();
+    _dueAmountController.dispose();
+    _advancedAmountController.dispose();
     _notesController.dispose();
+    for (var controller in _personsControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -113,6 +170,45 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                 validator: (value) =>
                     value?.isEmpty ?? true ? 'Required' : null,
                 prefixIcon: const Icon(Icons.badge_outlined),
+              ),
+              const SizedBox(height: 16),
+              CustomTextField(
+                label: 'Mobile Number',
+                controller: _clientMobileNumberController,
+                keyboardType: TextInputType.phone,
+                prefixIcon: const Icon(Icons.phone_android_outlined),
+                hint: '+91 XXXXX XXXXX',
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Password is required';
+                  }
+                  if (value.length < 6) {
+                    return 'Password must be at least 6 characters';
+                  }
+                  return null;
+                },
               ),
             ]),
             const SizedBox(height: AppDimensions.spacing16),
@@ -168,6 +264,40 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
             ]),
             const SizedBox(height: AppDimensions.spacing16),
 
+            _buildSectionCard('Services', [
+              ..._availableServices.map(
+                (service) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CheckboxListTile(
+                      title: Text(service),
+                      value: _selectedServices[service],
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedServices[service] = value ?? false;
+                        });
+                      },
+                    ),
+                    if (_selectedServices[service]!)
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          left: 16,
+                          right: 16,
+                          bottom: 16,
+                        ),
+                        child: CustomTextField(
+                          label: 'Number of Persons',
+                          controller: _personsControllers[service],
+                          keyboardType: TextInputType.number,
+                          prefixIcon: const Icon(Icons.people),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ]),
+            const SizedBox(height: AppDimensions.spacing16),
+
             _buildSectionCard('Order Status', [
               DropdownButtonFormField<String>(
                 value: _status,
@@ -194,6 +324,13 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
             const SizedBox(height: AppDimensions.spacing16),
 
             _buildSectionCard('Payment Details', [
+              CustomTextField(
+                label: 'Total Order Value',
+                controller: _totalOrderValueController,
+                keyboardType: TextInputType.number,
+                prefixIcon: const Icon(Icons.currency_rupee),
+              ),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
@@ -218,6 +355,49 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'Due Amount',
+                      controller: _dueAmountController,
+                      keyboardType: TextInputType.number,
+                      prefixIcon: const Icon(Icons.currency_rupee),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: InkWell(
+                      onTap: _selectDueDate,
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: 'Due Date',
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.calendar_today_outlined),
+                        ),
+                        child: Text(
+                          _dueDate == null
+                              ? 'Select due date'
+                              : '${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}',
+                          style: TextStyle(
+                            color: _dueDate == null
+                                ? AppColors.textSecondary
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              CustomTextField(
+                label: 'Advanced Amount',
+                controller: _advancedAmountController,
+                keyboardType: TextInputType.number,
+                prefixIcon: const Icon(Icons.currency_rupee),
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
@@ -297,6 +477,20 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
     }
   }
 
+  Future<void> _selectDueDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _dueDate ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
+    );
+    if (picked != null && picked != _dueDate) {
+      setState(() {
+        _dueDate = picked;
+      });
+    }
+  }
+
   void _saveOrder() {
     if (_formKey.currentState?.validate() ?? false) {
       if (_eventDate == null) {
@@ -311,6 +505,20 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
 
       final totalAmount = double.tryParse(_totalAmountController.text) ?? 0.0;
       final paidAmount = double.tryParse(_paidAmountController.text) ?? 0.0;
+      final totalOrderValue = double.tryParse(_totalOrderValueController.text);
+      final dueAmount = double.tryParse(_dueAmountController.text);
+      final advancedAmount = double.tryParse(_advancedAmountController.text);
+
+      final services = _selectedServices.entries
+          .where((e) => e.value)
+          .map(
+            (e) => ServiceAssignment(
+              serviceName: e.key,
+              status: 'pending',
+              persons: int.tryParse(_personsControllers[e.key]!.text),
+            ),
+          )
+          .toList();
 
       final order = Order(
         id:
@@ -318,6 +526,9 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
             'ORD${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
         clientName: _clientNameController.text,
         clientId: _clientIdController.text,
+        clientMobileNumber: _clientMobileNumberController.text.isEmpty
+            ? null
+            : _clientMobileNumberController.text,
         eventName: _eventNameController.text,
         eventType: _eventTypeController.text,
         eventDate: _eventDate!,
@@ -326,7 +537,11 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
         paymentStatus: _paymentStatus,
         totalAmount: totalAmount,
         paidAmount: paidAmount,
-        services: widget.order?.services ?? [],
+        totalOrderValue: totalOrderValue,
+        dueAmount: dueAmount,
+        dueDate: _dueDate,
+        advancedAmount: advancedAmount,
+        services: services,
         payments: widget.order?.payments ?? [],
         notes: _notesController.text.isEmpty ? null : _notesController.text,
         createdDate: widget.order?.createdDate ?? DateTime.now(),

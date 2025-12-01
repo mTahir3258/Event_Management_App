@@ -33,6 +33,11 @@ class Routes {
   static const String quotationDetails = '/quotations/:id';
   static const String quotationForm = '/quotations/form';
 
+  // Payment Routes
+  static const String paymentList = '/payments';
+  static const String paymentDetails = '/payments/:id';
+  static const String paymentForm = '/payments/form';
+
   // Setup Routes
   static const String leadSource = '/setup/lead-sources';
   static const String eventType = '/setup/event-types';

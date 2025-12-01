@@ -32,6 +32,9 @@ import 'package:ui_specification/features/quotations/screens/quotation_list_scre
 import 'package:ui_specification/features/quotations/screens/quotation_detail_screen.dart';
 import 'package:ui_specification/features/quotations/screens/quotation_form_screen.dart';
 import 'package:ui_specification/models/quotation.dart';
+import 'package:ui_specification/features/payments/providers/payment_provider.dart';
+import 'package:ui_specification/features/payments/screens/payment_list_screen.dart';
+import 'package:ui_specification/models/payment.dart';
 import 'package:ui_specification/features/setup/providers/master_data_provider.dart';
 import 'package:ui_specification/features/setup/screens/master_data_screens.dart';
 import 'package:ui_specification/features/setup/screens/team_member_screen.dart';
@@ -59,6 +62,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => OrderProvider()),
         ChangeNotifierProvider(create: (_) => EventProvider()),
         ChangeNotifierProvider(create: (_) => QuotationProvider()),
+        ChangeNotifierProvider(create: (_) => PaymentProvider()),
         ChangeNotifierProvider(create: (_) => MasterDataProvider()),
         ChangeNotifierProvider(create: (_) => UserManagementProvider()),
         ChangeNotifierProvider(create: (_) => CommunicationProvider()),
@@ -108,6 +112,7 @@ class MyApp extends StatelessWidget {
             final quotation = args is Quotation ? args : null;
             return QuotationFormScreen(quotation: quotation);
           },
+          Routes.paymentList: (context) => const PaymentListScreen(),
           Routes.teamMembers: (context) => const TeamMemberScreen(),
 
           // Setup Routes

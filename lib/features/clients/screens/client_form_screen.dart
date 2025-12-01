@@ -17,9 +17,12 @@ class ClientFormScreen extends StatefulWidget {
 
 class _ClientFormScreenState extends State<ClientFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _fullNameController;
+  late TextEditingController _firstNameController;
+  late TextEditingController _lastNameController;
+  late TextEditingController _mobileNumberController;
   late TextEditingController _whatsappController;
   late TextEditingController _alternateNumberController;
+  late TextEditingController _addressController;
   late TextEditingController _emailController;
   late TextEditingController _sourceController;
   late TextEditingController _createdByController;
@@ -28,9 +31,19 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
   @override
   void initState() {
     super.initState();
-    _fullNameController = TextEditingController(
-      text: widget.client?.fullName ?? '',
+
+    // Parse fullName into first and last name components
+    final fullName = widget.client?.fullName ?? '';
+    final nameParts = fullName.trim().split(' ');
+    final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+    final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+
+    _firstNameController = TextEditingController(text: firstName);
+    _lastNameController = TextEditingController(text: lastName);
+    _mobileNumberController = TextEditingController(
+      text: widget.client?.mobileNumber ?? '',
     );
+
     _whatsappController = TextEditingController(
       text: widget.client?.whatsappNumber ?? '',
     );
@@ -38,6 +51,9 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
       text: widget.client?.alternateNumber ?? '',
     );
     _emailController = TextEditingController(text: widget.client?.email ?? '');
+    _addressController = TextEditingController(
+      text: widget.client?.address ?? '',
+    );
     _sourceController = TextEditingController(
       text: widget.client?.source ?? '',
     );
@@ -49,10 +65,13 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
 
   @override
   void dispose() {
-    _fullNameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _mobileNumberController.dispose();
     _whatsappController.dispose();
     _alternateNumberController.dispose();
     _emailController.dispose();
+    _addressController.dispose();
     _sourceController.dispose();
     _createdByController.dispose();
     _notesController.dispose();
@@ -84,18 +103,45 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
           padding: const EdgeInsets.all(AppDimensions.spacing16),
           children: [
             _buildSectionCard('Client Information', [
-              CustomTextField(
-                label: 'Full Name',
-                controller: _fullNameController,
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Required' : null,
-                prefixIcon: const Icon(Icons.person_outline),
-                hint: 'e.g., Rajesh & Priya',
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'First Name',
+                      controller: _firstNameController,
+                      validator: (value) =>
+                          value?.isEmpty ?? true ? 'Required' : null,
+                      prefixIcon: const Icon(Icons.person_outline),
+                      hint: 'First name',
+                    ),
+                  ),
+                  const SizedBox(width: AppDimensions.spacing12),
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'Last Name',
+                      controller: _lastNameController,
+                      validator: (value) =>
+                          value?.isEmpty ?? true ? 'Required' : null,
+                      prefixIcon: const Icon(Icons.person_outline),
+                      hint: 'Last name',
+                    ),
+                  ),
+                ],
               ),
             ]),
             const SizedBox(height: AppDimensions.spacing16),
 
             _buildSectionCard('Contact Details', [
+              CustomTextField(
+                label: 'Mobile Number',
+                controller: _mobileNumberController,
+                keyboardType: TextInputType.phone,
+                validator: (value) =>
+                    value?.isEmpty ?? true ? 'Required' : null,
+                prefixIcon: const Icon(Icons.phone_android_outlined),
+                hint: '+91 XXXXX XXXXX',
+              ),
+              const SizedBox(height: 16),
               CustomTextField(
                 label: 'WhatsApp Number',
                 controller: _whatsappController,
@@ -120,6 +166,14 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
                 keyboardType: TextInputType.emailAddress,
                 prefixIcon: const Icon(Icons.email_outlined),
                 hint: 'Optional',
+              ),
+              const SizedBox(height: 16),
+              CustomTextField(
+                label: 'Address',
+                controller: _addressController,
+                maxLines: 3,
+                prefixIcon: const Icon(Icons.location_on_outlined),
+                hint: 'Full address with city, state, pincode',
               ),
             ]),
             const SizedBox(height: AppDimensions.spacing16),
@@ -190,12 +244,17 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
         id:
             widget.client?.id ??
             'CLT${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
-        fullName: _fullNameController.text,
+        firstName: _firstNameController.text,
+        lastName: _lastNameController.text,
+        mobileNumber: _mobileNumberController.text,
         whatsappNumber: _whatsappController.text,
         alternateNumber: _alternateNumberController.text.isEmpty
             ? null
             : _alternateNumberController.text,
         email: _emailController.text.isEmpty ? null : _emailController.text,
+        address: _addressController.text.isEmpty
+            ? null
+            : _addressController.text,
         source: _sourceController.text,
         createdBy: _createdByController.text,
         createdDate: widget.client?.createdDate ?? DateTime.now(),

@@ -123,6 +123,17 @@ class DashboardScreen extends StatelessWidget {
             null,
             '/orders',
           ),
+          const SizedBox(height: AppDimensions.spacing8),
+          _buildMetricCard(
+            context,
+            Icons.description_outlined,
+            'Total Quotations',
+            '89',
+            'All time',
+            AppColors.primary,
+            null,
+            '/quotations',
+          ),
         ],
       );
     }
@@ -140,8 +151,9 @@ class DashboardScreen extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: AppDimensions.spacing16,
-      mainAxisSpacing: AppDimensions.spacing16,
-      childAspectRatio: 2.0,
+      mainAxisSpacing: AppDimensions.spacing12,
+      childAspectRatio:
+          1.9, // Reduced to make cards shorter and more content-fitting
       children: [
         _buildMetricCard(
           context,
@@ -212,6 +224,16 @@ class DashboardScreen extends StatelessWidget {
           AppColors.secondary,
           null,
           '/orders',
+        ),
+        _buildMetricCard(
+          context,
+          Icons.description_outlined,
+          'Total Quotations',
+          '89',
+          'All time',
+          AppColors.primary,
+          null,
+          '/quotations',
         ),
       ],
     );
@@ -301,6 +323,18 @@ class DashboardScreen extends StatelessWidget {
             icon: Icons.description_outlined,
             title: 'Quotations',
             route: '/quotations',
+          ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.payment_outlined,
+            title: 'Payments',
+            route: '/payments',
+          ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.warning_outlined,
+            title: 'Incomplete Leads',
+            route: '/leads/incomplete',
           ),
           const Divider(),
           ExpansionTile(

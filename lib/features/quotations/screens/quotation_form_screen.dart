@@ -5,7 +5,11 @@ import 'package:ui_specification/core/theme/app_colors.dart';
 import 'package:ui_specification/core/theme/app_dimensions.dart';
 import 'package:ui_specification/core/widgets/custom_text_field.dart';
 import 'package:ui_specification/features/quotations/providers/quotation_provider.dart';
+import 'package:ui_specification/features/clients/providers/client_provider.dart';
+import 'package:ui_specification/features/leads/providers/lead_provider.dart';
 import 'package:ui_specification/models/quotation.dart';
+import 'package:ui_specification/models/client.dart';
+import 'package:ui_specification/models/lead.dart';
 
 class QuotationFormScreen extends StatefulWidget {
   final Quotation? quotation;
@@ -18,19 +22,34 @@ class QuotationFormScreen extends StatefulWidget {
 
 class _QuotationFormScreenState extends State<QuotationFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _clientNameController;
+  late TextEditingController _firstNameController;
+  late TextEditingController _lastNameController;
+  late TextEditingController _eventNameController;
   late TextEditingController _eventTypeController;
+  late TextEditingController _teamController;
+  late TextEditingController _commercialController;
   late DateTime _eventDate;
   List<QuotationItemEntry> _items = [];
+  dynamic _selectedPerson; // Can be Client or Lead
 
   @override
   void initState() {
     super.initState();
-    _clientNameController = TextEditingController(
-      text: widget.quotation?.clientName ?? '',
+    _firstNameController = TextEditingController(
+      text: widget.quotation?.firstName ?? '',
+    );
+    _lastNameController = TextEditingController(
+      text: widget.quotation?.lastName ?? '',
+    );
+    _eventNameController = TextEditingController(
+      text: widget.quotation?.eventName ?? '',
     );
     _eventTypeController = TextEditingController(
       text: widget.quotation?.eventType ?? '',
+    );
+    _teamController = TextEditingController(text: widget.quotation?.team ?? '');
+    _commercialController = TextEditingController(
+      text: widget.quotation?.commercial ?? '',
     );
     _eventDate =
         widget.quotation?.eventDate ??
@@ -51,6 +70,22 @@ class _QuotationFormScreenState extends State<QuotationFormScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _eventNameController.dispose();
+    _eventTypeController.dispose();
+    _teamController.dispose();
+    _commercialController.dispose();
+    for (var item in _items) {
+      item.description.dispose();
+      item.quantity.dispose();
+      item.price.dispose();
+    }
+    super.dispose();
+  }
+
   void _addItem() {
     setState(() {
       _items.add(
@@ -67,6 +102,18 @@ class _QuotationFormScreenState extends State<QuotationFormScreen> {
     setState(() {
       _items.removeAt(index);
     });
+  }
+
+  Future<void> _selectEventDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _eventDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
+    );
+    if (date != null) {
+      setState(() => _eventDate = date);
+    }
   }
 
   double get _totalAmount {
@@ -104,62 +151,164 @@ class _QuotationFormScreenState extends State<QuotationFormScreen> {
           padding: const EdgeInsets.all(AppDimensions.spacing16),
           children: [
             _buildSectionCard('Client Details', [
-              CustomTextField(
-                label: 'Client Name',
-                controller: _clientNameController,
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Required' : null,
-                prefixIcon: const Icon(Icons.person_outline),
-              ),
-              const SizedBox(height: 16),
-              CustomTextField(
-                label: 'Event Type',
-                controller: _eventTypeController,
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Required' : null,
-                prefixIcon: const Icon(Icons.event_note),
-              ),
-              const SizedBox(height: 16),
-              InkWell(
-                onTap: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: _eventDate,
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
-                  );
-                  if (date != null) {
-                    setState(() => _eventDate = date);
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.border),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
+              Builder(
+                builder: (context) {
+                  final clients = Client.generateMockList(5);
+                  final leads = Lead.getMockLeads();
+
+                  // Combine clients and leads into one list
+                  final combinedPersons = [
+                    ...clients.map((c) => {'type': 'client', 'person': c}),
+                    ...leads.map((l) => {'type': 'lead', 'person': l}),
+                  ];
+
+                  return Column(
                     children: [
-                      const Icon(
-                        Icons.calendar_today,
-                        color: AppColors.textSecondary,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<Map<String, dynamic>>(
+                              value: null,
+                              decoration: const InputDecoration(
+                                labelText: 'Select Client/Lead',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.person),
+                              ),
+                              items: combinedPersons.map((personMap) {
+                                final person = personMap['person'];
+                                final type = personMap['type'];
+                                final displayName = type == 'client'
+                                    ? 'Client: ${(person as Client).fullName}'
+                                    : 'Lead: ${(person as Lead).fullName}';
+                                return DropdownMenuItem<Map<String, dynamic>>(
+                                  value: personMap,
+                                  child: Text(displayName),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedPerson = value?['person'];
+                                  if (_selectedPerson != null) {
+                                    if (_selectedPerson is Client) {
+                                      _firstNameController.text =
+                                          (_selectedPerson as Client).firstName;
+                                      _lastNameController.text =
+                                          (_selectedPerson as Client).lastName;
+                                    } else if (_selectedPerson is Lead) {
+                                      _firstNameController.text =
+                                          (_selectedPerson as Lead).firstName;
+                                      _lastNameController.text =
+                                          (_selectedPerson as Lead).lastName;
+                                    }
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: CustomTextField(
+                              label: 'First Name',
+                              controller: _firstNameController,
+                              prefixIcon: const Icon(Icons.person_outline),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Text(
-                        DateFormat('MMM dd, yyyy').format(_eventDate),
-                        style: const TextStyle(fontSize: 16),
-                      ),
+                      const SizedBox(height: 16),
                     ],
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'Last Name',
+                      controller: _lastNameController,
+                      prefixIcon: const Icon(Icons.person_outline),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'Event Name',
+                      controller: _eventNameController,
+                      prefixIcon: const Icon(Icons.event_outlined),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'Event Type',
+                      controller: _eventTypeController,
+                      validator: (value) =>
+                          value?.isEmpty ?? true ? 'Required' : null,
+                      prefixIcon: const Icon(Icons.event_note),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'Team',
+                      controller: _teamController,
+                      prefixIcon: const Icon(Icons.group),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'Commercial',
+                      controller: _commercialController,
+                      prefixIcon: const Icon(Icons.business),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: InkWell(
+                      onTap: _selectEventDate,
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: AppColors.border),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.calendar_today,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              DateFormat('MMM dd, yyyy').format(_eventDate),
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ]),
             const SizedBox(height: AppDimensions.spacing16),
 
             _buildSectionCard('Items', [
-              ..._items.asMap().entries.map(
-                (entry) => _buildItemRow(entry.key, entry.value),
-              ),
+              ..._items
+                  .asMap()
+                  .entries
+                  .map((entry) => _buildItemRow(entry.key, entry.value))
+                  .toList(),
               const SizedBox(height: 16),
               OutlinedButton.icon(
                 onPressed: _addItem,
@@ -323,10 +472,27 @@ class _QuotationFormScreenState extends State<QuotationFormScreen> {
         quotationNumber:
             widget.quotation?.quotationNumber ??
             'Q-${DateTime.now().year}-${DateTime.now().millisecondsSinceEpoch.toString().substring(9)}',
-        clientId: 'temp_client_id', // In real app, select from client list
-        clientName: _clientNameController.text,
+        clientId: _selectedPerson is Client
+            ? _selectedPerson.id
+            : 'temp_client_id',
+        clientName: _selectedPerson is Client
+            ? _selectedPerson.fullName
+            : '${_firstNameController.text} ${_lastNameController.text}'.trim(),
+        firstName: _firstNameController.text.isEmpty
+            ? null
+            : _firstNameController.text,
+        lastName: _lastNameController.text.isEmpty
+            ? null
+            : _lastNameController.text,
+        eventName: _eventNameController.text.isEmpty
+            ? null
+            : _eventNameController.text,
         eventType: _eventTypeController.text,
         eventDate: _eventDate,
+        team: _teamController.text.isEmpty ? null : _teamController.text,
+        commercial: _commercialController.text.isEmpty
+            ? null
+            : _commercialController.text,
         items: items,
         status: widget.quotation?.status ?? QuotationStatus.draft,
         createdAt: widget.quotation?.createdAt ?? DateTime.now(),
