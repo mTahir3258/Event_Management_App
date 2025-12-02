@@ -281,7 +281,7 @@ class _EventListScreenState extends State<EventListScreen> {
                   desktop: _buildDataTable(paginatedEvents),
                 ),
         ),
-        if (filteredEvents.isNotEmpty)
+        if (filteredEvents.isNotEmpty && !Responsive.isMobile(context))
           PaginationControls(
             currentPage: _currentPage,
             totalPages: totalPages > 0 ? totalPages : 1,

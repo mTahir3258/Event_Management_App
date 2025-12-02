@@ -44,6 +44,27 @@ class _OrderListScreenState extends State<OrderListScreen>
 
   @override
   Widget build(BuildContext context) {
+    final body = Consumer<OrderProvider>(
+      builder: (context, provider, child) {
+        if (provider.isLoading) {
+          return const LoadingIndicator(message: 'Loading orders...');
+        }
+
+        return TabBarView(
+          controller: _tabController,
+          children: [
+            _buildOrdersList(provider.orders),
+            _buildOrdersList(provider.upcomingOrders),
+            _buildOrdersList(provider.unassignedOrders),
+            _buildOrdersList(provider.paymentDueOrders),
+            _buildOrdersList(
+              provider.orders.where((o) => o.status == 'completed').toList(),
+            ),
+          ],
+        );
+      },
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Orders'),
@@ -83,26 +104,7 @@ class _OrderListScreenState extends State<OrderListScreen>
               child: const Icon(Icons.add),
             )
           : null,
-      body: Consumer<OrderProvider>(
-        builder: (context, provider, child) {
-          if (provider.isLoading) {
-            return const LoadingIndicator(message: 'Loading orders...');
-          }
-
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              _buildOrdersList(provider.orders),
-              _buildOrdersList(provider.upcomingOrders),
-              _buildOrdersList(provider.unassignedOrders),
-              _buildOrdersList(provider.paymentDueOrders),
-              _buildOrdersList(
-                provider.orders.where((o) => o.status == 'completed').toList(),
-              ),
-            ],
-          );
-        },
-      ),
+      body: body,
     );
   }
 
@@ -141,7 +143,7 @@ class _OrderListScreenState extends State<OrderListScreen>
     return Column(
       children: [
         Expanded(child: _buildMobileList(paginatedOrders)),
-        if (orders.isNotEmpty)
+        if (orders.isNotEmpty && !Responsive.isMobile(context))
           PaginationControls(
             currentPage: _currentPage,
             totalPages: totalPages > 0 ? totalPages : 1,

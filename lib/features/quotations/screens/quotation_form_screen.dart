@@ -25,9 +25,8 @@ class _QuotationFormScreenState extends State<QuotationFormScreen> {
   late TextEditingController _firstNameController;
   late TextEditingController _lastNameController;
   late TextEditingController _eventNameController;
-  late TextEditingController _eventTypeController;
   late TextEditingController _teamController;
-  late TextEditingController _commercialController;
+  String? _selectedEventType;
   late DateTime _eventDate;
   List<QuotationItemEntry> _items = [];
   dynamic _selectedPerson; // Can be Client or Lead
@@ -44,13 +43,8 @@ class _QuotationFormScreenState extends State<QuotationFormScreen> {
     _eventNameController = TextEditingController(
       text: widget.quotation?.eventName ?? '',
     );
-    _eventTypeController = TextEditingController(
-      text: widget.quotation?.eventType ?? '',
-    );
+    _selectedEventType = widget.quotation?.eventType;
     _teamController = TextEditingController(text: widget.quotation?.team ?? '');
-    _commercialController = TextEditingController(
-      text: widget.quotation?.commercial ?? '',
-    );
     _eventDate =
         widget.quotation?.eventDate ??
         DateTime.now().add(const Duration(days: 7));
@@ -75,9 +69,7 @@ class _QuotationFormScreenState extends State<QuotationFormScreen> {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _eventNameController.dispose();
-    _eventTypeController.dispose();
     _teamController.dispose();
-    _commercialController.dispose();
     for (var item in _items) {
       item.description.dispose();
       item.quantity.dispose();
@@ -136,8 +128,12 @@ class _QuotationFormScreenState extends State<QuotationFormScreen> {
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: _saveQuotation,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.textOnPrimary,
+            ),
             child: const Text(
               'SAVE',
               style: TextStyle(fontWeight: FontWeight.bold),
@@ -244,12 +240,54 @@ class _QuotationFormScreenState extends State<QuotationFormScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: CustomTextField(
-                      label: 'Event Type',
-                      controller: _eventTypeController,
+                    child: DropdownButtonFormField<String>(
+                      value: _selectedEventType,
+                      decoration: const InputDecoration(
+                        labelText: 'Event Type',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.event_note),
+                      ),
                       validator: (value) =>
                           value?.isEmpty ?? true ? 'Required' : null,
-                      prefixIcon: const Icon(Icons.event_note),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'Wedding',
+                          child: Text('Wedding'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Birthday',
+                          child: Text('Birthday'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Corporate',
+                          child: Text('Corporate'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Anniversary',
+                          child: Text('Anniversary'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Engagement',
+                          child: Text('Engagement'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Baby Shower',
+                          child: Text('Baby Shower'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Graduation',
+                          child: Text('Graduation'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Retirement',
+                          child: Text('Retirement'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedEventType = value;
+                        });
+                      },
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -265,12 +303,8 @@ class _QuotationFormScreenState extends State<QuotationFormScreen> {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(
-                    child: CustomTextField(
-                      label: 'Commercial',
-                      controller: _commercialController,
-                      prefixIcon: const Icon(Icons.business),
-                    ),
+                  const Expanded(
+                    child: SizedBox(), // Empty space where commercial field was
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -416,7 +450,7 @@ class _QuotationFormScreenState extends State<QuotationFormScreen> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  flex: 3,
+                  flex: 2,
                   child: CustomTextField(
                     label: 'Unit Price',
                     controller: item.price,
@@ -427,7 +461,7 @@ class _QuotationFormScreenState extends State<QuotationFormScreen> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  flex: 3,
+                  flex: 2,
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -487,12 +521,9 @@ class _QuotationFormScreenState extends State<QuotationFormScreen> {
         eventName: _eventNameController.text.isEmpty
             ? null
             : _eventNameController.text,
-        eventType: _eventTypeController.text,
+        eventType: _selectedEventType ?? '',
         eventDate: _eventDate,
         team: _teamController.text.isEmpty ? null : _teamController.text,
-        commercial: _commercialController.text.isEmpty
-            ? null
-            : _commercialController.text,
         items: items,
         status: widget.quotation?.status ?? QuotationStatus.draft,
         createdAt: widget.quotation?.createdAt ?? DateTime.now(),

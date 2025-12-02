@@ -141,8 +141,12 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: _saveOrder,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.textOnPrimary,
+            ),
             child: const Text(
               'SAVE',
               style: TextStyle(fontWeight: FontWeight.bold),

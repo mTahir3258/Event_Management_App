@@ -145,7 +145,7 @@ class _LeadListScreenState extends State<LeadListScreen> {
                       )
                     : _buildMobileList(paginatedLeads),
               ),
-              if (filteredLeads.isNotEmpty)
+              if (filteredLeads.isNotEmpty && !Responsive.isMobile(context))
                 PaginationControls(
                   currentPage: _currentPage,
                   totalPages: totalPages,

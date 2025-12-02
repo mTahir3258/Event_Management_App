@@ -67,6 +67,71 @@ class _ClientListScreenState extends State<ClientListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final body = Consumer<ClientProvider>(
+      builder: (context, clientProvider, child) {
+        if (clientProvider.isLoading) {
+          return const LoadingIndicator(message: 'Loading clients...');
+        }
+
+        final filteredClients = _getFilteredClients(clientProvider.clients);
+        final paginatedClients = _getPaginatedClients(filteredClients);
+        final totalPages = (filteredClients.length / _rowsPerPage).ceil();
+
+        return Column(
+          children: [
+            FilterBar(
+              searchController: _searchController,
+              searchHint: 'Search clients...',
+              filters: const [
+                'All',
+              ], // Add more filters if Client model supports it
+              selectedFilter: _selectedFilter,
+              onFilterChanged: (filter) {
+                setState(() {
+                  _selectedFilter = filter;
+                  _currentPage = 1;
+                });
+              },
+              onDateRangePressed: () {},
+              onClearSearch: () {
+                _searchController.clear();
+              },
+            ),
+            Expanded(
+              child: filteredClients.isEmpty
+                  ? EmptyState(
+                      icon: Icons.people_outline,
+                      message: 'No clients found',
+                      subtitle: 'Try adjusting your search or filters',
+                      actionLabel: 'Add Client',
+                      onActionPressed: () =>
+                          Navigator.of(context).pushNamed(Routes.clientForm),
+                    )
+                  : _buildMobileList(paginatedClients),
+            ),
+            if (filteredClients.isNotEmpty && !Responsive.isMobile(context))
+              PaginationControls(
+                currentPage: _currentPage,
+                totalPages: totalPages,
+                rowsPerPage: _rowsPerPage,
+                totalItems: filteredClients.length,
+                onPageChanged: (page) {
+                  setState(() {
+                    _currentPage = page;
+                  });
+                },
+                onRowsPerPageChanged: (rows) {
+                  setState(() {
+                    _rowsPerPage = rows;
+                    _currentPage = 1;
+                  });
+                },
+              ),
+          ],
+        );
+      },
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Clients'),
@@ -92,70 +157,7 @@ class _ClientListScreenState extends State<ClientListScreen> {
               child: const Icon(Icons.add),
             )
           : null,
-      body: Consumer<ClientProvider>(
-        builder: (context, clientProvider, child) {
-          if (clientProvider.isLoading) {
-            return const LoadingIndicator(message: 'Loading clients...');
-          }
-
-          final filteredClients = _getFilteredClients(clientProvider.clients);
-          final paginatedClients = _getPaginatedClients(filteredClients);
-          final totalPages = (filteredClients.length / _rowsPerPage).ceil();
-
-          return Column(
-            children: [
-              FilterBar(
-                searchController: _searchController,
-                searchHint: 'Search clients...',
-                filters: const [
-                  'All',
-                ], // Add more filters if Client model supports it
-                selectedFilter: _selectedFilter,
-                onFilterChanged: (filter) {
-                  setState(() {
-                    _selectedFilter = filter;
-                    _currentPage = 1;
-                  });
-                },
-                onDateRangePressed: () {},
-                onClearSearch: () {
-                  _searchController.clear();
-                },
-              ),
-              Expanded(
-                child: filteredClients.isEmpty
-                    ? EmptyState(
-                        icon: Icons.people_outline,
-                        message: 'No clients found',
-                        subtitle: 'Try adjusting your search or filters',
-                        actionLabel: 'Add Client',
-                        onActionPressed: () =>
-                            Navigator.of(context).pushNamed(Routes.clientForm),
-                      )
-                    : _buildMobileList(paginatedClients),
-              ),
-              if (filteredClients.isNotEmpty)
-                PaginationControls(
-                  currentPage: _currentPage,
-                  totalPages: totalPages,
-                  rowsPerPage: _rowsPerPage,
-                  totalItems: filteredClients.length,
-                  onPageChanged: (page) {
-                    setState(() {
-                      _currentPage = page;
-                    });
-                  },
-                  onRowsPerPageChanged: (rows) {
-                    setState(() {
-                      _rowsPerPage = rows;
-                      _currentPage = 1;
-                    });
-                  },
-                ),
-            ],
-          );
-        },
-      ),
+      body: body,
     );
   }
 

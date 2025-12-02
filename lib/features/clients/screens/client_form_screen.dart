@@ -88,8 +88,12 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: _saveClient,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.textOnPrimary,
+            ),
             child: const Text(
               'SAVE',
               style: TextStyle(fontWeight: FontWeight.bold),

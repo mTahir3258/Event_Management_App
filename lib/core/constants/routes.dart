@@ -6,6 +6,7 @@ class Routes {
   static const String forgotPassword = '/forgot-password';
 
   // Main Routes
+  static const String home = '/home';
   static const String dashboard = '/dashboard';
 
   // Lead Routes

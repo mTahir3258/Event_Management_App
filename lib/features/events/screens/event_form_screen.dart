@@ -68,8 +68,12 @@ class _EventFormScreenState extends State<EventFormScreen> {
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: _saveEvent,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.textOnPrimary,
+            ),
             child: const Text(
               'SAVE',
               style: TextStyle(fontWeight: FontWeight.bold),

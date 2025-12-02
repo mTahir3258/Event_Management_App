@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:ui_specification/core/theme/app_colors.dart';
+import 'package:ui_specification/core/theme/app_dimensions.dart';
 import 'package:ui_specification/core/widgets/custom_card.dart';
 import 'package:ui_specification/core/widgets/custom_text_field.dart';
 import 'package:ui_specification/features/user_management/providers/user_management_provider.dart';
@@ -268,6 +270,258 @@ class _UserListScreenState extends State<UserListScreen> {
         ],
       ),
     );
+  }
+}
+
+class RolesListScreen extends StatefulWidget {
+  const RolesListScreen({super.key});
+
+  @override
+  State<RolesListScreen> createState() => _RolesListScreenState();
+}
+
+class _RolesListScreenState extends State<RolesListScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<UserManagementProvider>(
+      builder: (context, provider, child) {
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            title: const Text('Roles'),
+            backgroundColor: AppColors.surface,
+            foregroundColor: AppColors.textPrimary,
+            elevation: 0,
+          ),
+          body: provider.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: provider.roles.length,
+                  itemBuilder: (context, index) {
+                    final role = provider.roles[index];
+                    return CustomCard(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.green.shade100,
+                          child: Text(
+                            role.name.substring(0, 1).toUpperCase(),
+                            style: const TextStyle(color: Colors.green),
+                          ),
+                        ),
+                        title: Text(
+                          role.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          '${role.permissions.length} permissions',
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(
+                                Icons.edit_outlined,
+                                color: Colors.blue,
+                              ),
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      RoleFormScreen(role: role),
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: Colors.red,
+                              ),
+                              onPressed: () => _showDeleteConfirmation(
+                                context,
+                                provider,
+                                role,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const RoleFormScreen()),
+            ),
+            backgroundColor: AppColors.primary,
+            icon: const Icon(Icons.add),
+            label: const Text('Add Role'),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showDeleteConfirmation(
+    BuildContext context,
+    UserManagementProvider provider,
+    Role role,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Role'),
+        content: Text('Are you sure you want to delete ${role.name}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              provider.deleteRole(role.id);
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class RoleFormScreen extends StatefulWidget {
+  final Role? role;
+
+  const RoleFormScreen({super.key, this.role});
+
+  @override
+  State<RoleFormScreen> createState() => _RoleFormScreenState();
+}
+
+class _RoleFormScreenState extends State<RoleFormScreen> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameController;
+  List<String> _selectedPermissions = [];
+
+  final List<String> _availablePermissions = [
+    'Manage Users',
+    'Manage Roles',
+    'View Reports',
+    'Edit Settings',
+    'Delete Records',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.role?.name ?? '');
+    _selectedPermissions = List.from(widget.role?.permissions ?? []);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: Text(widget.role != null ? 'Edit Role' : 'Add Role'),
+        backgroundColor: AppColors.surface,
+        foregroundColor: AppColors.textPrimary,
+        elevation: 0,
+        actions: [
+          ElevatedButton(
+            onPressed: _saveRole,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.textOnPrimary,
+            ),
+            child: const Text('SAVE'),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CustomCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      CustomTextField(
+                        label: 'Role Name',
+                        controller: _nameController,
+                        validator: (v) =>
+                            v?.isEmpty ?? true ? 'Required' : null,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Permissions',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ..._availablePermissions.map((permission) {
+                        return CheckboxListTile(
+                          title: Text(permission),
+                          value: _selectedPermissions.contains(permission),
+                          onChanged: (value) {
+                            setState(() {
+                              if (value ?? false) {
+                                _selectedPermissions.add(permission);
+                              } else {
+                                _selectedPermissions.remove(permission);
+                              }
+                            });
+                          },
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _saveRole() {
+    if (_formKey.currentState?.validate() ?? false) {
+      final provider = Provider.of<UserManagementProvider>(
+        context,
+        listen: false,
+      );
+
+      final role = Role(
+        id: widget.role?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        name: _nameController.text,
+        permissions: _selectedPermissions,
+      );
+
+      if (widget.role != null) {
+        provider.updateRole(role);
+      } else {
+        provider.addRole(role);
+      }
+
+      Navigator.pop(context);
+    }
   }
 }
 

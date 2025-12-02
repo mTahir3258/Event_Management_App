@@ -207,6 +207,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: TextStyle(color: AppColors.primary),
                     ),
                   ),
+                  const SizedBox(height: AppDimensions.spacing16),
+
+                  // Quick Login Button
+                  OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.primary),
+                      foregroundColor: AppColors.primary,
+                    ),
+                    onPressed: () {
+                      Navigator.of(
+                        context,
+                      ).pushReplacementNamed(Routes.dashboard);
+                    },
+                    child: const Text('Quick Login (Demo)'),
+                  ),
                 ],
               ),
             ),

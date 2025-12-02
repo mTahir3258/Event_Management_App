@@ -12,6 +12,7 @@ import 'package:ui_specification/models/quotation.dart';
 import 'package:ui_specification/core/widgets/filter_bar.dart';
 import 'package:ui_specification/core/widgets/pagination_controls.dart';
 import 'package:ui_specification/core/constants/routes.dart';
+import 'package:ui_specification/core/utils/responsive.dart';
 
 class QuotationListScreen extends StatefulWidget {
   const QuotationListScreen({super.key});
@@ -179,7 +180,8 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
                               },
                             ),
                     ),
-                    if (filteredQuotations.isNotEmpty)
+                    if (filteredQuotations.isNotEmpty &&
+                        !Responsive.isMobile(context))
                       PaginationControls(
                         currentPage: _currentPage,
                         totalPages: totalPages > 0 ? totalPages : 1,

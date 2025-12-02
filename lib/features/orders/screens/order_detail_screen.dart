@@ -4,6 +4,7 @@ import 'package:ui_specification/core/theme/app_colors.dart';
 import 'package:ui_specification/core/widgets/status_badge.dart';
 import 'package:ui_specification/features/orders/providers/order_provider.dart';
 import 'package:ui_specification/core/constants/routes.dart';
+import 'package:ui_specification/models/order.dart';
 import 'package:intl/intl.dart';
 
 /// Modern Order Details Screen
@@ -163,18 +164,37 @@ class OrderDetailScreen extends StatelessWidget {
             title: 'Services & Team',
             icon: Icons.people_alt,
             iconColor: AppColors.secondary,
-            child: order.services.isEmpty
-                ? const Center(
+            child: Column(
+              children: [
+                if (order.services.isEmpty)
+                  const Center(
                     child: Padding(
                       padding: EdgeInsets.all(20.0),
                       child: Text('No services assigned'),
                     ),
                   )
-                : Column(
+                else
+                  Column(
                     children: order.services
                         .map((service) => _buildServiceTile(service))
                         .toList(),
                   ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showAssignTeamDialog(context, order),
+                    icon: const Icon(Icons.person_add),
+                    label: const Text('Assign Team Members'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.secondary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
 
           const SizedBox(height: 16),
@@ -209,6 +229,101 @@ class OrderDetailScreen extends StatelessWidget {
         backgroundColor: AppColors.success,
         icon: const Icon(Icons.payment),
         label: const Text('Add Payment'),
+      ),
+    );
+  }
+
+  void _showAssignTeamDialog(BuildContext context, Order order) {
+    // Mock team members based on quotation team (in a real app, this would come from the quotation)
+    final mockTeamMembers = [
+      'Rahul Sharma',
+      'Priya Singh',
+      'Amit Kumar',
+      'Sneha Patel',
+      'Vikram Joshi',
+      'Kavita Rao',
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Assign Team Members'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: order.services.map((service) {
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          service.serviceName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String>(
+                          value: service.teamMember,
+                          decoration: const InputDecoration(
+                            labelText: 'Select Team Member',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                          ),
+                          items: [
+                            const DropdownMenuItem<String>(
+                              value: null,
+                              child: Text('Select a team member...'),
+                            ),
+                            ...mockTeamMembers.map((member) {
+                              return DropdownMenuItem<String>(
+                                value: member,
+                                child: Text(member),
+                              );
+                            }).toList(),
+                          ],
+                          onChanged: (value) {
+                            // In a real app, this would update the service assignment
+                            // For demo purposes, we'll just show a brief confirmation
+                            // The actual assignment would be saved when clicking "Save Assignments"
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // In a real app, save the assignments
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Team assignments saved successfully'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            child: const Text('Save Assignments'),
+          ),
+        ],
       ),
     );
   }
